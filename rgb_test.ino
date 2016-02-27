@@ -194,7 +194,7 @@ void crossFade(int color[3]) {
         Serial.println(bluVal); 
       } 
       DEBUG += 1;
-    }
+    } 
   }
   // Update current values for next loop
   prevR = redVal; 
