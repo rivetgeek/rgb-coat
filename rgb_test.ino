@@ -1,9 +1,19 @@
+//remove delays, replace them with timers. 
+//this will allow multiple crossfades at the same time.
+//honestly, just rewrite this code, lazy bastard.
 
- 
-int redPin = 11;
-int greenPin = 9;
-int bluePin = 10;
-int changeDelay = 4000;
+
+//testing random led selection
+int led[2] = {0,1};
+int currentLed;
+int previousLed;
+int choice;
+int redPin;
+int greenPin;
+int bluePin;
+int changeDelay = 6;
+unsigned long holdTimer;
+unsigned long waitTimer;
 
  
 // Color arrays
@@ -22,8 +32,8 @@ int redVal = black[0];
 int grnVal = black[1]; 
 int bluVal = black[2];
 
-int wait = 2;      // 10ms internal crossFade delay; increase for slower fades
-int hold = 5000;       // Optional hold when a color is complete, before the next crossFade
+int wait = 1;      // 10ms internal crossFade delay; increase for slower fades
+int hold = 5;       // Optional hold when a color is complete, before the next crossFade
 int DEBUG = 1;      // DEBUG counter; if set to 1, will write values back via serial
 int loopCount = 60; // How often should DEBUG report?
 int repeat = 0;     // How many times should we loop before stopping? (0 for no stop)
@@ -41,6 +51,9 @@ void setup()
   pinMode(redPin, OUTPUT);   // sets the pins as output
   pinMode(greenPin, OUTPUT);   
   pinMode(bluePin, OUTPUT); 
+  pinMode(3, OUTPUT);
+  pinMode(5, OUTPUT);
+  pinMode(6, OUTPUT);
 
   if (DEBUG) {           // If we want to see values for debugging...
     Serial.begin(9600);  // ...set up the serial ouput 
@@ -50,22 +63,31 @@ void setup()
 // Main program: list the order of crossfades
 void loop()
 {
- 
+int choice = random(0,2);
+Serial.println(choice);
+
+
+   if (led[choice]==1){
+  redPin = 6;
+  greenPin = 5;
+  bluePin = 3;
+}else{
+  redPin = 11;
+  greenPin = 10;
+  bluePin = 9;
+}
+  updatePin();
+
+}
+
+void updatePin(){
   crossFade(green);
   crossFade(teal);
   crossFade(blue);
   crossFade(yellow);
   crossFade(white);
   crossFade(black);
-
-  if (repeat) { // Do we loop a finite number of times?
-    j += 1;
-    if (j >= repeat) { // Are we there yet?
-      exit(j);         // If so, stop.
-    }
-  }
 }
-
 /* BELOW THIS LINE IS THE MATH -- YOU SHOULDN'T NEED TO CHANGE THIS FOR THE BASICS
 * 
 * The program works like this:
@@ -150,11 +172,15 @@ void crossFade(int color[3]) {
     grnVal = calculateVal(stepG, grnVal, i);
     bluVal = calculateVal(stepB, bluVal, i);
 
-    analogWrite(redPin, redVal);   // Write current values to LED pins
-    analogWrite(greenPin, grnVal);      
-    analogWrite(bluePin, bluVal); 
+    analogWrite(redPin, 255-redVal);   // Write current values to LED pins
+    analogWrite(greenPin, 255-grnVal);      
+    analogWrite(bluePin, 255-bluVal); 
 
-    delay(wait); // Pause for 'wait' milliseconds before resuming the loop
+    waitTimer = millis();
+    while(millis() - waitTimer > 3){
+      //do fuck all
+    }
+   // delay(wait); // Pause for 'wait' milliseconds before resuming the loop
 
     if (DEBUG) { // If we want serial output, print it at the 
       if (i == 0 or i % loopCount == 0) { // beginning, and every loopCount times
@@ -174,5 +200,9 @@ void crossFade(int color[3]) {
   prevR = redVal; 
   prevG = grnVal; 
   prevB = bluVal;
-  delay(hold); // Pause for optional 'wait' milliseconds before resuming the loop
+  holdTimer = millis();
+  while (millis()-holdTimer < 5000){
+   // do fuck all
+  }
+  //delay(hold); // Pause for optional 'wait' milliseconds before resuming the loop
 }
