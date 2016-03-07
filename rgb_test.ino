@@ -1,208 +1,77 @@
-//remove delays, replace them with timers. 
-//this will allow multiple crossfades at the same time.
-//honestly, just rewrite this code, lazy bastard.
+#include<FastLED.h>
+#define NUM_LEDS 96
+#define DATA_PIN 3
+#define CLOCK_PIN 4
+#define NUM_ACTIVE 20
+
+CRGBArray<NUM_LEDS> leds;
+
+//array of active LEDS
+int RunningPins[NUM_ACTIVE];
+
+//array of last setting for active LEDS
+int LastColorIndex[NUM_ACTIVE];
+int unsigned long lastPinTime;
+CRGBPalette16 currentPalette = RainbowColors_p;
+TBlendType    currentBlending = LINEARBLEND;
+
+void setup() {
+  
+  delay( 3000 ); // power-up safety delay
+  FastLED.addLeds<APA102, DATA_PIN, CLOCK_PIN, BGR>(leds, NUM_LEDS);
+SetupPalette();
+}
+
+void loop() {
+
+    //set the color for each pin in the running array
+   for (int i=0;i<NUM_ACTIVE;i++){
+    
+    if ( millis() - lastPinTime > 3000){
+      while 
+  RunningPins[i] = random(0,NUM_LEDS);
+  lastPinTime = millis();
+}
+
+      //if cycle is complete, reset the color index and blank the pin
+      if (LastColorIndex[i] >255){
+          leds[RunningPins[i]] = CRGB::Black;
+          //if time to start new pin
+//*****
+//*****
+          RunningPins[i] = NULL;
+          LastColorIndex[i]=0;
+   
+        }
+
+    leds[RunningPins[i]] = ColorFromPalette(currentPalette, LastColorIndex[i], 64, currentBlending);
+    LastColorIndex[i]+=1;
+   }
+   
+  FastLED.delay(60);
+
+  
+
+}
 
 
-//testing random led selection
-int led[2] = {0,1};
-int currentLed;
-int previousLed;
-int choice;
-int redPin;
-int greenPin;
-int bluePin;
-int changeDelay = 6;
-unsigned long holdTimer;
-unsigned long waitTimer;
 
- 
-// Color arrays
-int black[3]  = { 0, 0, 0 };
-int white[3]  = { 100, 100, 100 };
-int red[3]    = { 100, 0, 0 };
-int green[3]  = { 0, 100, 0 };
-int blue[3]   = { 0, 0, 100 };
-int yellow[3] = { 40, 95, 0 };
-int teal[3] = {0, 128, 128};
-int dimWhite[3] = { 30, 30, 30 };
-
-
-// Set initial color
-int redVal = black[0];
-int grnVal = black[1]; 
-int bluVal = black[2];
-
-int wait = 1;      // 10ms internal crossFade delay; increase for slower fades
-int hold = 5;       // Optional hold when a color is complete, before the next crossFade
-int DEBUG = 1;      // DEBUG counter; if set to 1, will write values back via serial
-int loopCount = 60; // How often should DEBUG report?
-int repeat = 0;     // How many times should we loop before stopping? (0 for no stop)
-int j = 0;          // Loop counter for repeat
-
-// Initialize color variables
-int prevR = redVal;
-int prevG = grnVal;
-int prevB = bluVal;
-
-// Set up the LED outputs
-void setup()
+void SetupPalette()
 {
-
-  pinMode(redPin, OUTPUT);   // sets the pins as output
-  pinMode(greenPin, OUTPUT);   
-  pinMode(bluePin, OUTPUT); 
-  pinMode(3, OUTPUT);
-  pinMode(5, OUTPUT);
-  pinMode(6, OUTPUT);
-
-  if (DEBUG) {           // If we want to see values for debugging...
-    Serial.begin(9600);  // ...set up the serial ouput 
-  }
+    CRGB AliceBlue = CRGB::AliceBlue;
+    CRGB Amethyst  = CRGB::Amethyst;
+    CRGB Aqua = CRGB::Aqua;
+    CRGB Aquamarine = CRGB::Aquamarine;
+    CRGB black  = CRGB::Black;
+    
+    currentPalette = CRGBPalette16(
+                                   black, AliceBlue,  Amethyst,  Aqua,
+                                   AliceBlue,  Amethyst,  Aqua,  Aquamarine,
+                                   AliceBlue,  Amethyst,  Aqua,  Aquamarine,
+                                   AliceBlue,  Amethyst,  Aqua,  black
+                                   );
 }
 
-// Main program: list the order of crossfades
-void loop()
-{
-int choice = random(0,2);
-Serial.println(choice);
 
 
-   if (led[choice]==1){
-  redPin = 6;
-  greenPin = 5;
-  bluePin = 3;
-}else{
-  redPin = 11;
-  greenPin = 10;
-  bluePin = 9;
-}
-  updatePin();
 
-}
-
-void updatePin(){
-  crossFade(green);
-  crossFade(teal);
-  crossFade(blue);
-  crossFade(yellow);
-  crossFade(white);
-  crossFade(black);
-}
-/* BELOW THIS LINE IS THE MATH -- YOU SHOULDN'T NEED TO CHANGE THIS FOR THE BASICS
-* 
-* The program works like this:
-* Imagine a crossfade that moves the red LED from 0-10, 
-*   the green from 0-5, and the blue from 10 to 7, in
-*   ten steps.
-*   We'd want to count the 10 steps and increase or 
-*   decrease color values in evenly stepped increments.
-*   Imagine a + indicates raising a value by 1, and a -
-*   equals lowering it. Our 10 step fade would look like:
-* 
-*   1 2 3 4 5 6 7 8 9 10
-* R + + + + + + + + + +
-* G   +   +   +   +   +
-* B     -     -     -
-* 
-* The red rises from 0 to 10 in ten steps, the green from 
-* 0-5 in 5 steps, and the blue falls from 10 to 7 in three steps.
-* 
-* In the real program, the color percentages are converted to 
-* 0-255 values, and there are 1020 steps (255*4).
-* 
-* To figure out how big a step there should be between one up- or
-* down-tick of one of the LED values, we call calculateStep(), 
-* which calculates the absolute gap between the start and end values, 
-* and then divides that gap by 1020 to determine the size of the step  
-* between adjustments in the value.
-*/
-
-int calculateStep(int prevValue, int endValue) {
-  int step = endValue - prevValue; // What's the overall gap?
-  if (step) {                      // If its non-zero, 
-    step = 1020/step;              //   divide by 1020
-  } 
-  return step;
-}
-
-/* The next function is calculateVal. When the loop value, i,
-*  reaches the step size appropriate for one of the
-*  colors, it increases or decreases the value of that color by 1. 
-*  (R, G, and B are each calculated separately.)
-*/
-
-int calculateVal(int step, int val, int i) {
-
-  if ((step) && i % step == 0) { // If step is non-zero and its time to change a value,
-    if (step > 0) {              //   increment the value if step is positive...
-      val += 1;           
-    } 
-    else if (step < 0) {         //   ...or decrement it if step is negative
-      val -= 1;
-    } 
-  }
-  // Defensive driving: make sure val stays in the range 0-255
-  if (val > 255) {
-    val = 255;
-  } 
-  else if (val < 0) {
-    val = 0;
-  }
-  return val;
-}
-
-/* crossFade() converts the percentage colors to a 
-*  0-255 range, then loops 1020 times, checking to see if  
-*  the value needs to be updated each time, then writing
-*  the color values to the correct pins.
-*/
-
-void crossFade(int color[3]) {
-  // Convert to 0-255
-  int R = (color[0] * 255) / 100;
-  int G = (color[1] * 255) / 100;
-  int B = (color[2] * 255) / 100;
-
-  int stepR = calculateStep(prevR, R);
-  int stepG = calculateStep(prevG, G); 
-  int stepB = calculateStep(prevB, B);
-
-  for (int i = 0; i <= 1020; i++) {
-    redVal = calculateVal(stepR, redVal, i);
-    grnVal = calculateVal(stepG, grnVal, i);
-    bluVal = calculateVal(stepB, bluVal, i);
-
-    analogWrite(redPin, 255-redVal);   // Write current values to LED pins
-    analogWrite(greenPin, 255-grnVal);      
-    analogWrite(bluePin, 255-bluVal); 
-
-    waitTimer = millis();
-    while(millis() - waitTimer > 3){
-      //do fuck all
-    }
-   // delay(wait); // Pause for 'wait' milliseconds before resuming the loop
-
-    if (DEBUG) { // If we want serial output, print it at the 
-      if (i == 0 or i % loopCount == 0) { // beginning, and every loopCount times
-        Serial.print("Loop/RGB: #");
-        Serial.print(i);
-        Serial.print(" | ");
-        Serial.print(redVal);
-        Serial.print(" / ");
-        Serial.print(grnVal);
-        Serial.print(" / ");  
-        Serial.println(bluVal); 
-      } 
-      DEBUG += 1;
-    } 
-  }
-  // Update current values for next loop
-  prevR = redVal; 
-  prevG = grnVal; 
-  prevB = bluVal;
-  holdTimer = millis();
-  while (millis()-holdTimer < 5000){
-   // do fuck all
-  }
-  //delay(hold); // Pause for optional 'wait' milliseconds before resuming the loop
-}
