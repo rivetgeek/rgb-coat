@@ -1,7 +1,9 @@
 #include<FastLED.h>
 #define NUM_LEDS 96
+//#define NUM_LEDS 3
 #define DATA_PIN 3
 #define CLOCK_PIN 4
+#define AVAILABLE_LED 999
 #define NUM_ACTIVE 20 //This changes how many pixels are on at any given time
 
 CRGBArray<NUM_LEDS> leds;
@@ -31,8 +33,9 @@ void loop() {
   for (int i = 0; i < NUM_ACTIVE; i++) {
 
     //Is it time to turn on a new pixel?
-    if ( millis() - lastPinTime > 3000) {
-      if (RunningPins[i] == 999) {
+    if ( millis() - lastPinTime > 1000) {
+      //make sure the new pixel isnt overwriting a running pixel.
+      if (RunningPins[i] == AVAILABLE_LED) {
         //add a random pixel to the Running Pins array.
         RunningPins[i] = random(0, NUM_LEDS);
         //reset the counter
@@ -43,12 +46,18 @@ void loop() {
     //if cycle is complete, reset the color index and blank the pin
     if (LastColorIndex[i] > 255) {
       leds[RunningPins[i]] = CRGB::Black;
-      RunningPins[i] = 999;
+      //mark the current pixel as inactive and reset its index
+      RunningPins[i] = AVAILABLE_LED;
       LastColorIndex[i] = 0;
     }
-    //Change the pixels to the respective color index based on their place in the cycle.
-    leds[RunningPins[i]] = ColorFromPalette(currentPalette, LastColorIndex[i], 64, currentBlending);
-    LastColorIndex[i] += 1;
+
+    if (RunningPins[i] != AVAILABLE_LED) {
+      //Change the pixels to the respective color index based on their place in the cycle.
+      leds[RunningPins[i]] = ColorFromPalette(currentPalette, LastColorIndex[i], 64, currentBlending);
+      //update the index for the pin for the next loop
+
+      LastColorIndex[i] += 1;
+    }
   }
 
   FastLED.delay(60);
