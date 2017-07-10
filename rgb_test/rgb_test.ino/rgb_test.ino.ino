@@ -1,27 +1,31 @@
 #include<FastLED.h>
-#define NUM_LEDS 20
+#define NUM_LEDS 59
 
-//#define NUM_LEDS 3
 #define DATA_PIN 7
 #define CLOCK_PIN 4
-//this is an ugly hack to denote an led thats not being used. need to fix this.
-//consider making array with size of num_led and each running LED being the index,
-//and the value either 0/1
-#define AVAILABLE_LED 999
-#define NUM_ACTIVE 20 //This changes how many pixels are on at any given time
 
+//This changes how many pixels are on at any given time. 
+//Increasing this affects current usage
+#define MAX_ACTIVE 20 
+
+
+//Actual FastLed array. See Fast LED docs.
 CRGBArray<NUM_LEDS> leds;
+
+//counter to keep track of how many active LEDS
+int activeCounter =0;
 
 //cars for test pattern
 unsigned long previousTime =0;
 
-//array of currently active LEDS
-int RunningPins[NUM_ACTIVE];
+//keeps track of the LEDs and their state (on/off). might be able to piggy 
+//back on leds array above and remove this
+int LED_ARRAY[NUM_LEDS];
 
 int unsigned long lastPinTime;
 
 //array of last color index for active LEDS
-int LastColorIndex[NUM_ACTIVE];
+int LastColorIndex[NUM_LEDS];
 
 //var for current pattern
 int pattern = 1;
@@ -49,6 +53,11 @@ void setup() {
   SetupPalette();
   pinMode(buttonPin, INPUT);
   Serial.begin(9600);
+  
+//set LED array to all zeros to allow tracking
+  for (int i = 0; i < NUM_LEDS; i++){
+    LED_ARRAY[i] = 0;
+  }
 }
 
 void loop() {
@@ -89,36 +98,58 @@ void loop() {
 //enter patterns here
   switch (pattern) {
   case 1:
-    //Loop through all the pixels
-    for (int i = 0; i < NUM_ACTIVE; i++) {
+  
 
+      
       //Is it time to turn on a new pixel?
-      if ( millis() - lastPinTime > 1000) {
-        //make sure the new pixel isnt overwriting a running pixel.
-        if (RunningPins[i] == AVAILABLE_LED) {
-          //add a random pixel to the Running Pins array.
-          RunningPins[i] = random(0, NUM_LEDS);
-          //reset the counter
-          lastPinTime = millis();
+      if ( millis() - lastPinTime > 1000 && activeCounter <= MAX_ACTIVE) {
+      int newPixel;
+      newPixel = random(0, NUM_LEDS);
+        //find an open pixel
+        while (LED_ARRAY[newPixel]!=0){
+          newPixel = random(0, NUM_LEDS);
+          Serial.println("Checking if "+String(newPixel));
         }
+
+
+       //Add the new pixel
+       LED_ARRAY[newPixel]=1;
+
+       //reset the counter
+       lastPinTime = millis();
+
+       //Add to active counter
+       activeCounter +=1;
       }
 
+      //loop through pixels and do what needs to be done to the active ones
+      for (int i = 0; i < NUM_LEDS; i++){
+      int currentPixel = i;
+
+      //check if curentPin is active and skip is its not
+      
+      if (LED_ARRAY[currentPixel]==0){
+        continue;
+      }
+
+      
       //if cycle is complete, reset the color index and blank the pin
-      if (LastColorIndex[i] > 255) {
-        leds[RunningPins[i]] = CRGB::Black;
+      if (LastColorIndex[currentPixel] > 255) {
+        leds[currentPixel] = CRGB::Black;
+        
         //mark the current pixel as inactive and reset its index
-        RunningPins[i] = AVAILABLE_LED;
-        LastColorIndex[i] = 0;
+        LED_ARRAY[currentPixel] =0;
+        LastColorIndex[currentPixel] = 0;
+        activeCounter -= 1;
       }
 
-      if (RunningPins[i] != AVAILABLE_LED) {
         //Change the pixels to the respective color index based on their place in the cycle.
-        leds[RunningPins[i]] = ColorFromPalette(currentPalette, LastColorIndex[i], 64, currentBlending);
+        leds[currentPixel] = ColorFromPalette(currentPalette, LastColorIndex[i], 64, currentBlending);
+ 
         //update the index for the pin for the next loop
-
-        LastColorIndex[i] += 1;
-      }
-    }
+        LastColorIndex[currentPixel] += 1;
+    
+      }    
 //TODO: this delay is breaking the button (maybe).
     FastLED.delay(60);
     break;
