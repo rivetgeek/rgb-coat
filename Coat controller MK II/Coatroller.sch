@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="7.6.0">
+<eagle version="7.5.0">
 <drawing>
 <settings>
 <setting alwaysvectorfont="no"/>
@@ -853,6 +853,7 @@ DDEController.pdf</description>
 <part name="POWEROUT" library="con-phoenix-350" deviceset="1751248" device=""/>
 <part name="C1" library="SparkFun-Capacitors" deviceset="2.2UF50V10%(1206)" device=""/>
 <part name="PIN" library="con-amp-micromatch" deviceset="MICROMATCH-4" device=""/>
+<part name="C2" library="SparkFun-Capacitors" deviceset="2.2UF50V10%(1206)" device=""/>
 </parts>
 <sheets>
 <sheet>
@@ -867,11 +868,12 @@ DDEController.pdf</description>
 <instance part="U$1" gate="G$1" x="43.18" y="96.52"/>
 <instance part="POWEROUT" gate="-1" x="40.64" y="66.04" rot="R180"/>
 <instance part="POWEROUT" gate="-2" x="40.64" y="60.96" rot="R180"/>
-<instance part="C1" gate="G$1" x="76.2" y="81.28" rot="R270"/>
+<instance part="C1" gate="G$1" x="88.9" y="88.9" rot="R270"/>
 <instance part="PIN" gate="-1" x="157.48" y="33.02" rot="R180"/>
 <instance part="PIN" gate="-2" x="157.48" y="30.48" rot="R180"/>
 <instance part="PIN" gate="-3" x="157.48" y="27.94" rot="R180"/>
 <instance part="PIN" gate="-4" x="157.48" y="25.4" rot="R180"/>
+<instance part="C2" gate="G$1" x="88.9" y="73.66" rot="R270"/>
 </instances>
 <busses>
 </busses>
@@ -880,9 +882,11 @@ DDEController.pdf</description>
 <segment>
 <pinref part="POWERINPUT" gate="-1" pin="K"/>
 <wire x1="63.5" y1="55.88" x2="63.5" y2="60.96" width="0.1524" layer="91"/>
-<wire x1="63.5" y1="60.96" x2="63.5" y2="81.28" width="0.1524" layer="91"/>
 <pinref part="POWEROUT" gate="-2" pin="K"/>
-<wire x1="63.5" y1="81.28" x2="63.5" y2="91.44" width="0.1524" layer="91"/>
+<wire x1="63.5" y1="60.96" x2="63.5" y2="78.74" width="0.1524" layer="91"/>
+<wire x1="63.5" y1="78.74" x2="63.5" y2="81.28" width="0.1524" layer="91"/>
+<wire x1="63.5" y1="81.28" x2="63.5" y2="83.82" width="0.1524" layer="91"/>
+<wire x1="63.5" y1="83.82" x2="63.5" y2="91.44" width="0.1524" layer="91"/>
 <wire x1="63.5" y1="60.96" x2="43.18" y2="60.96" width="0.1524" layer="91"/>
 <junction x="63.5" y="60.96"/>
 <pinref part="U2" gate="G$1" pin="GND"/>
@@ -896,14 +900,24 @@ DDEController.pdf</description>
 <wire x1="111.76" y1="60.96" x2="81.28" y2="60.96" width="0.1524" layer="91"/>
 <pinref part="U1" gate="G$1" pin="GND@1"/>
 <junction x="119.38" y="55.88"/>
-<pinref part="C1" gate="G$1" pin="2"/>
 <wire x1="81.28" y1="60.96" x2="63.5" y2="60.96" width="0.1524" layer="91"/>
-<wire x1="73.66" y1="81.28" x2="63.5" y2="81.28" width="0.1524" layer="91"/>
-<junction x="63.5" y="81.28"/>
 <pinref part="PIN" gate="-4" pin="S"/>
 <wire x1="152.4" y1="25.4" x2="81.28" y2="25.4" width="0.1524" layer="91"/>
 <wire x1="81.28" y1="25.4" x2="81.28" y2="60.96" width="0.1524" layer="91"/>
 <junction x="81.28" y="60.96"/>
+<pinref part="C1" gate="G$1" pin="2"/>
+<wire x1="86.36" y1="88.9" x2="83.82" y2="88.9" width="0.1524" layer="91"/>
+<wire x1="83.82" y1="88.9" x2="83.82" y2="83.82" width="0.1524" layer="91"/>
+<wire x1="83.82" y1="83.82" x2="63.5" y2="83.82" width="0.1524" layer="91"/>
+<junction x="63.5" y="83.82"/>
+<pinref part="C2" gate="G$1" pin="2"/>
+<wire x1="86.36" y1="73.66" x2="83.82" y2="73.66" width="0.1524" layer="91"/>
+<wire x1="83.82" y1="73.66" x2="83.82" y2="78.74" width="0.1524" layer="91"/>
+<wire x1="83.82" y1="78.74" x2="63.5" y2="78.74" width="0.1524" layer="91"/>
+<junction x="63.5" y="78.74"/>
+<pinref part="Y1" gate="G$1" pin="GND"/>
+<wire x1="91.44" y1="81.28" x2="63.5" y2="81.28" width="0.1524" layer="91"/>
+<junction x="63.5" y="81.28"/>
 </segment>
 </net>
 <net name="VCC" class="0">
@@ -945,6 +959,9 @@ DDEController.pdf</description>
 <pinref part="U1" gate="G$1" pin="PB6(XTAL1/TOSC1)"/>
 <wire x1="101.6" y1="88.9" x2="119.38" y2="88.9" width="0.1524" layer="91"/>
 <wire x1="119.38" y1="88.9" x2="119.38" y2="83.82" width="0.1524" layer="91"/>
+<pinref part="C1" gate="G$1" pin="1"/>
+<wire x1="101.6" y1="88.9" x2="93.98" y2="88.9" width="0.1524" layer="91"/>
+<junction x="101.6" y="88.9"/>
 </segment>
 </net>
 <net name="N$2" class="0">
@@ -953,13 +970,9 @@ DDEController.pdf</description>
 <pinref part="U1" gate="G$1" pin="PB7(XTAL2/TOSC2)"/>
 <wire x1="101.6" y1="73.66" x2="119.38" y2="73.66" width="0.1524" layer="91"/>
 <wire x1="119.38" y1="73.66" x2="119.38" y2="78.74" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="N$3" class="0">
-<segment>
-<pinref part="Y1" gate="G$1" pin="GND"/>
-<pinref part="C1" gate="G$1" pin="1"/>
-<wire x1="91.44" y1="81.28" x2="81.28" y2="81.28" width="0.1524" layer="91"/>
+<pinref part="C2" gate="G$1" pin="1"/>
+<wire x1="101.6" y1="73.66" x2="93.98" y2="73.66" width="0.1524" layer="91"/>
+<junction x="101.6" y="73.66"/>
 </segment>
 </net>
 <net name="DATA" class="0">
