@@ -1084,7 +1084,8 @@ You are welcome to use this library for commercial purposes. For attribution, we
 <wire x1="81.28" y1="60.96" x2="63.5" y2="60.96" width="0.1524" layer="91"/>
 <junction x="81.28" y="60.96"/>
 <pinref part="C1" gate="G$1" pin="2"/>
-<wire x1="81.28" y1="33.02" x2="81.28" y2="60.96" width="0.1524" layer="91"/>
+<wire x1="81.28" y1="33.02" x2="81.28" y2="53.34" width="0.1524" layer="91"/>
+<wire x1="81.28" y1="53.34" x2="81.28" y2="60.96" width="0.1524" layer="91"/>
 <wire x1="86.36" y1="88.9" x2="83.82" y2="88.9" width="0.1524" layer="91"/>
 <wire x1="83.82" y1="88.9" x2="83.82" y2="83.82" width="0.1524" layer="91"/>
 <wire x1="83.82" y1="83.82" x2="63.5" y2="83.82" width="0.1524" layer="91"/>
@@ -1102,6 +1103,9 @@ You are welcome to use this library for commercial purposes. For attribution, we
 <junction x="63.5" y="76.2"/>
 <pinref part="PIN" gate="-1" pin="S"/>
 <wire x1="152.4" y1="33.02" x2="81.28" y2="33.02" width="0.1524" layer="91"/>
+<pinref part="U1" gate="G$1" pin="GND@2"/>
+<wire x1="119.38" y1="53.34" x2="81.28" y2="53.34" width="0.1524" layer="91"/>
+<junction x="81.28" y="53.34"/>
 </segment>
 </net>
 <net name="DATA" class="0">
