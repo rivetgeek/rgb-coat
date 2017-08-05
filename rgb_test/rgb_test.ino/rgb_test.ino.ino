@@ -28,7 +28,7 @@ int unsigned long lastPinTime;
 int LastColorIndex[NUM_LEDS];
 
 //var for current pattern
-int pattern = 1;
+int pattern = 2;
 
 int num_patterns = 2;
 
