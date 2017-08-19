@@ -1,12 +1,17 @@
 #include<FastLED.h>
-#define NUM_LEDS 59
+#define NUM_LEDS 163 
 
 #define DATA_PIN 7
 #define CLOCK_PIN 4
 
-//This changes how many pixels are on at any given time. 
-//Increasing this affects current usage
-#define MAX_ACTIVE 20 
+//Define the coat patterns
+#define TEST_PATTERN 1
+#define FLOWER_PATTERN 2
+#define HEART_PULSE_PATTERN 3
+#define STARFIELD_PATTERN 4
+
+
+
 
 
 //Actual FastLed array. See Fast LED docs.
@@ -97,10 +102,12 @@ void loop() {
 
 //enter patterns here
   switch (pattern) {
-  case 1:
-  
+  case FLOWER_PATTERN:
+  {
+    //This changes how many pixels are on at any given time. 
+//Increasing this affects current usage
+#define MAX_ACTIVE 20 
 
-      
       //Is it time to turn on a new pixel?
       if ( millis() - lastPinTime > 1000 && activeCounter <= MAX_ACTIVE) {
       int newPixel;
@@ -153,31 +160,31 @@ void loop() {
 //TODO: this delay is breaking the button (maybe).
     FastLED.delay(60);
     break;
+  }
 
-//Test pattern - runs through RGB on all LEDs
-  case 2:
+    case HEART_PULSE_PATTERN:
+    {
+      //define the matrices for the coat parts
 
-  int colortime = 500;
-  //reset timer for first use or repeating pattern
-  CRGB color;
-  if (millis() - previousTime <= colortime){
-    color = CRGB::Red;
+int leftArm[][3] = {
+  {1,2,3},
+  {4,5,6},
+  {7,8,9},
+  {10,11,12},
+  {13,14,15},
+  {16,17,18}
+};
 
-  }
-    if (millis() - previousTime > colortime &&  millis() - previousTime< (colortime * 2)){
-    color = CRGB::Green;
-  }
-    if (millis() - previousTime > colortime* 2 && millis() - previousTime< colortime *3){
-    color = CRGB::Blue;
-  }
-      if (millis() - previousTime >= colortime * 4){
-  previousTime =millis();
-  }
-  
-    for (int i = 0; i < NUM_LEDS; i++) {
-      leds[i] = color;
+int rightArm[][3] = {
+  {146,147,148},
+  {149,150,151},
+  {152,153,154},
+  {155,156,157},
+  {158,159,160},
+  {161,162,163},
+};
+
     }
-    FastLED.show();
     break;
   }//end switch
   
