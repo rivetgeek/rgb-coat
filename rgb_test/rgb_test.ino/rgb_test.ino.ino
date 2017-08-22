@@ -68,7 +68,7 @@ void setup() {
   Serial.begin(9600);
 
   //set LED array to all zeros to allow tracking
-  for (int i = 0; i < NUM_LEDS-1; i++) {
+  for (int i = 0; i < NUM_LEDS; i++) {
     LastColorIndex[i] = 0;
   }
 }
@@ -137,7 +137,7 @@ void loop() {
         }
 
         //loop through pixels and do what needs to be done to the active ones
-        for (int i = 0; i < NUM_LEDS-1; i++) {
+        for (int i = 0; i < NUM_LEDS; i++) {
           int currentPixel = i;
 
           //check if curentPin is active and skip is its not
@@ -154,10 +154,10 @@ void loop() {
             //mark the current pixel as inactive and reset its index
 
             LastColorIndex[currentPixel] = 0;
-        }
-
             FastLED.delay(60);
             activeCounter -= 1;
+        }
+
           
 
           //Change the pixels to the respective color index based on their place in the cycle.
@@ -165,10 +165,11 @@ void loop() {
 
           //update the index for the pin for the next loop
           LastColorIndex[currentPixel] += 1;
-
-        break;
-        }
-      }
+        }//end of for loop
+        
+        
+      }//end of case
+      break;
 
     case HEART_PULSE_PATTERN:
       {
@@ -228,9 +229,10 @@ void loop() {
 
         FastLED.show();
         lastPulse =  millis();
-        break;
+        
         
       }//end heart pulse pattern
+      break;
 
 
   }//end switch
