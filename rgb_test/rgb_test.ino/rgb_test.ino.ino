@@ -40,8 +40,8 @@ int row = 0;
 //array of last color index for active LEDS
 int LastColorIndex[NUM_LEDS];
 
-//var for current pattern
-int pattern = 1;
+//var for current and start pattern
+int pattern = 2;
 
 int num_patterns = 2;
 
@@ -68,7 +68,7 @@ void setup() {
   Serial.begin(9600);
 
   //set LED array to all zeros to allow tracking
-  for (int i = 0; i < NUM_LEDS; i++) {
+  for (int i = 0; i < NUM_LEDS-1; i++) {
     LastColorIndex[i] = 0;
   }
 }
@@ -118,10 +118,10 @@ void loop() {
         //Is it time to turn on a new pixel?
         if ( millis() - lastPinTime > 1000 && activeCounter <= MAX_ACTIVE) {
           int newPixel;
-          newPixel = random(0, NUM_LEDS);
+          newPixel = random(0, NUM_LEDS-1);
           //find an open pixel
           while (LastColorIndex[newPixel] != 0) {
-            newPixel = random(0, NUM_LEDS);
+            newPixel = random(0, NUM_LEDS-1);
             Serial.println("Checking if " + String(newPixel));
           }
 
@@ -137,7 +137,7 @@ void loop() {
         }
 
         //loop through pixels and do what needs to be done to the active ones
-        for (int i = 0; i < NUM_LEDS; i++) {
+        for (int i = 0; i < NUM_LEDS-1; i++) {
           int currentPixel = i;
 
           //check if curentPin is active and skip is its not
@@ -154,8 +154,11 @@ void loop() {
             //mark the current pixel as inactive and reset its index
 
             LastColorIndex[currentPixel] = 0;
+        }
+
+            FastLED.delay(60);
             activeCounter -= 1;
-          }
+          
 
           //Change the pixels to the respective color index based on their place in the cycle.
           leds[currentPixel] = ColorFromPalette(currentPalette, LastColorIndex[i], 64, currentBlending);
@@ -163,19 +166,18 @@ void loop() {
           //update the index for the pin for the next loop
           LastColorIndex[currentPixel] += 1;
 
-        }
-        //TODO: this delay is breaking the button (maybe).
-        FastLED.delay(60);
         break;
+        }
       }
 
     case HEART_PULSE_PATTERN:
       {
-        //define the matrices for the coat parts
+
         CRGB pulseColor = CRGB::Red;
 
+        //define the matrices for the coat parts
         //matrices for the arms starting with the wrist at the top of the matrices
-        int leftArm[][4] = {
+        int rightArm[][4] = {
           {1, 2, 3, 4},
           {5, 6, 7, 8},
           {8, 9, 10, 11},
@@ -184,7 +186,7 @@ void loop() {
           {20, 21, 22, 23}
         };
 
-        int rightArm[][4] = {
+        int leftArm[][4] = {
           {163, 162, 161, 160},
           {159, 158, 157, 156},
           {155, 154, 153, 152},
@@ -197,11 +199,14 @@ void loop() {
 
         if (millis() - lastPulse > 500) {
           row++;
+
+        //  repeat from the bottom after hitting the top
+          if (row > 5) {
+            row = 0;
+          }
         }
 
-        if (row > 5) {
-          row = 0;
-        }
+
 
         //black out all the pixels so that only the active rows are on
         for (int i = 0; i < NUM_LEDS; i++) {
@@ -209,16 +214,17 @@ void loop() {
         }
 
         // arm[row][column]
-        //    while (row <= 6) {
+        //    while (row <= 5) {
+        leds[rightArm[row][0]] = pulseColor;
         leds[rightArm[row][1]] = pulseColor;
         leds[rightArm[row][2]] = pulseColor;
         leds[rightArm[row][3]] = pulseColor;
-        leds[rightArm[row][4]] = pulseColor;
 
+
+        leds[leftArm[row][0]] = pulseColor;
         leds[leftArm[row][1]] = pulseColor;
         leds[leftArm[row][2]] = pulseColor;
         leds[leftArm[row][3]] = pulseColor;
-        leds[leftArm[row][4]] = pulseColor;
 
         FastLED.show();
         lastPulse =  millis();
@@ -236,13 +242,13 @@ void SetupPalette()
   CRGB Amethyst  = CRGB::Amethyst;
   CRGB Aqua = CRGB::Aqua;
   CRGB Aquamarine = CRGB::Aquamarine;
-  CRGB black  = CRGB::Black;
+  CRGB Black  = CRGB::Black;
 
   currentPalette = CRGBPalette16(
-                     black, AliceBlue,  Amethyst,  Aqua,
+                     Black, AliceBlue,  Amethyst,  Aqua,
                      AliceBlue,  Amethyst,  Aqua,  Aquamarine,
                      AliceBlue,  Amethyst,  Aqua,  Aquamarine,
-                     AliceBlue,  Amethyst,  Aqua,  black
+                     AliceBlue,  Amethyst,  Aqua,  Black
                    );
 }
 
