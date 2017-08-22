@@ -10,9 +10,9 @@
 #define HEART_PULSE_PATTERN 2
 //#define STARFIELD_PATTERN 3
 
-//TODO: i have two arrays of length NUM_LEDS. This is taking up far too much memory.
-//Need to refactor code to just use one array to track state
-
+//This changes how many pixels are on at any given time.
+//Increasing this affects current usage
+#define MAX_ACTIVE 20
 
 
 //Actual FastLed array. See Fast LED docs.
@@ -30,8 +30,10 @@ unsigned long previousTime = 0;
 int unsigned long lastPinTime;
 
 //counter for heartbeat pulse
-int unsigned long lastPulse;
+int unsigned long lastPulse = 0;
 
+//what row is active (originally for pulse)
+int row = 0;
 
 // might be able to piggy
 //back on leds array above and remove this
@@ -91,6 +93,8 @@ void loop() {
       if (buttonState == HIGH) {
         previousTime = millis();
         FastLED.clear();
+        lastPulse = 0;
+        row = 0;
         if (pattern == num_patterns) {
           pattern = 1;
         } else {
@@ -110,9 +114,7 @@ void loop() {
   switch (pattern) {
     case FLOWER_PATTERN:
       {
-        //This changes how many pixels are on at any given time.
-        //Increasing this affects current usage
-#define MAX_ACTIVE 20
+
         //Is it time to turn on a new pixel?
         if ( millis() - lastPinTime > 1000 && activeCounter <= MAX_ACTIVE) {
           int newPixel;
@@ -192,38 +194,36 @@ void loop() {
         };
 
         //pulse up both arms
-        int counter = 0;
+
         if (millis() - lastPulse > 500) {
-          counter++;
+          row++;
         }
 
-        if (counter > 5) {
-          counter = 0;
+        if (row > 5) {
+          row = 0;
         }
 
         //black out all the pixels so that only the active rows are on
-        for (int i=0; i<NUM_LEDS;i++){
+        for (int i = 0; i < NUM_LEDS; i++) {
           leds[i] = CRGB::Black;
         }
-        
 
-        while (counter <= 5) {
-          leds[rightArm[counter][1]] = pulseColor;
-          leds[rightArm[counter][2]] = pulseColor;
-          leds[rightArm[counter][3]] = pulseColor;
-          leds[rightArm[counter][4]] = pulseColor;
+        // arm[row][column]
+        //    while (row <= 6) {
+        leds[rightArm[row][1]] = pulseColor;
+        leds[rightArm[row][2]] = pulseColor;
+        leds[rightArm[row][3]] = pulseColor;
+        leds[rightArm[row][4]] = pulseColor;
 
-          leds[leftArm[counter][1]] = pulseColor;
-          leds[leftArm[counter][2]] = pulseColor;
-          leds[leftArm[counter][3]] = pulseColor;
-          leds[leftArm[counter][4]] = pulseColor;
+        leds[leftArm[row][1]] = pulseColor;
+        leds[leftArm[row][2]] = pulseColor;
+        leds[leftArm[row][3]] = pulseColor;
+        leds[leftArm[row][4]] = pulseColor;
 
-          FastLED.show();
-          lastPulse =  millis();
-        }
+        FastLED.show();
+        lastPulse =  millis();
+        //  }
         break;
-        {
-        }
       }//end switch
 
 
