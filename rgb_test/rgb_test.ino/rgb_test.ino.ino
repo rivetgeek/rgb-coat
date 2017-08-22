@@ -119,10 +119,10 @@ void loop() {
         if ( millis() - lastPinTime > 1000 && activeCounter <= MAX_ACTIVE) {
           int newPixel;
           newPixel = random(0, NUM_LEDS-1);
-          //find an open pixel
+          
+          //Keep generating random pixel locations until we find a free (0) slot.
           while (LastColorIndex[newPixel] != 0) {
             newPixel = random(0, NUM_LEDS-1);
-            Serial.println("Checking if " + String(newPixel));
           }
 
 
@@ -178,8 +178,8 @@ void loop() {
         //define the matrices for the coat parts
         //matrices for the arms starting with the wrist at the top of the matrices
         int rightArm[][4] = {
-          {1, 2, 3, 4},
-          {5, 6, 7, 8},
+          {0, 1, 2, 3},
+          {4, 5, 6, 7},
           {8, 9, 10, 11},
           {12, 13, 14, 15},
           {16, 17, 18, 19},
@@ -187,20 +187,21 @@ void loop() {
         };
 
         int leftArm[][4] = {
-          {163, 162, 161, 160},
-          {159, 158, 157, 156},
-          {155, 154, 153, 152},
-          {151, 150, 149, 148},
-          {147, 146, 145, 144},
-          {143, 142, 141, 140}
+          {162, 161, 160, 159},
+          {158, 157, 156, 155},
+          {154, 153, 152, 151},
+          {150, 149, 148, 147},
+          {146, 145, 144, 143},
+          {142, 141, 140, 139}
         };
 
         //pulse up both arms
 
+        //if it is time to pulse up one row
         if (millis() - lastPulse > 500) {
           row++;
 
-        //  repeat from the bottom after hitting the top
+        // reset if we hit the top
           if (row > 5) {
             row = 0;
           }
@@ -214,7 +215,6 @@ void loop() {
         }
 
         // arm[row][column]
-        //    while (row <= 5) {
         leds[rightArm[row][0]] = pulseColor;
         leds[rightArm[row][1]] = pulseColor;
         leds[rightArm[row][2]] = pulseColor;
@@ -228,13 +228,13 @@ void loop() {
 
         FastLED.show();
         lastPulse =  millis();
-        //  }
         break;
-      }//end switch
+        
+      }//end heart pulse pattern
 
 
-  }
-}
+  }//end switch
+}//end loop
 
 void SetupPalette()
 {
