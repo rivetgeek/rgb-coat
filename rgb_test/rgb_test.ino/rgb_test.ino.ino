@@ -1,16 +1,17 @@
 #include<FastLED.h>
-#define NUM_LEDS 163 
+#define NUM_LEDS 163
 
 #define DATA_PIN 7
 #define CLOCK_PIN 4
 
 //Define the coat patterns
-#define TEST_PATTERN 1
-#define FLOWER_PATTERN 2
-#define HEART_PULSE_PATTERN 3
-#define STARFIELD_PATTERN 4
+//#define TEST_PATTERN 1
+#define FLOWER_PATTERN 1
+#define HEART_PULSE_PATTERN 2
+//#define STARFIELD_PATTERN 3
 
-
+//TODO: i have two arrays of length NUM_LEDS. This is taking up far too much memory.
+//Need to refactor code to just use one array to track state
 
 
 
@@ -18,22 +19,27 @@
 CRGBArray<NUM_LEDS> leds;
 
 //counter to keep track of how many active LEDS
-int activeCounter =0;
+int activeCounter = 0;
 
 //cars for test pattern
-unsigned long previousTime =0;
+unsigned long previousTime = 0;
 
-//keeps track of the LEDs and their state (on/off). might be able to piggy 
-//back on leds array above and remove this
-int LED_ARRAY[NUM_LEDS];
+//keeps track of the LEDs and their state (on/off). i think we can get rid of this and save a ton of memory
+//int LED_ARRAY[NUM_LEDS];
 
 int unsigned long lastPinTime;
 
+//counter for heartbeat pulse
+int unsigned long lastPulse;
+
+
+// might be able to piggy
+//back on leds array above and remove this
 //array of last color index for active LEDS
 int LastColorIndex[NUM_LEDS];
 
 //var for current pattern
-int pattern = 2;
+int pattern = 1;
 
 int num_patterns = 2;
 
@@ -54,14 +60,14 @@ TBlendType    currentBlending = LINEARBLEND;
 void setup() {
 
   delay( 3000 ); // power-up safety delay
-  FastLED.addLeds<APA102, DATA_PIN, CLOCK_PIN, BGR,DATA_RATE_MHZ(10)>(leds, NUM_LEDS);
+  FastLED.addLeds<APA102, DATA_PIN, CLOCK_PIN, BGR, DATA_RATE_MHZ(10)>(leds, NUM_LEDS);
   SetupPalette();
   pinMode(buttonPin, INPUT);
   Serial.begin(9600);
-  
-//set LED array to all zeros to allow tracking
-  for (int i = 0; i < NUM_LEDS; i++){
-    LED_ARRAY[i] = 0;
+
+  //set LED array to all zeros to allow tracking
+  for (int i = 0; i < NUM_LEDS; i++) {
+    LastColorIndex[i] = 0;
   }
 }
 
@@ -73,7 +79,7 @@ void loop() {
   //switch changed
   if (reading != lastButtonState) {
     lastDebounceTime = millis();
-    
+
   }
 
 
@@ -100,97 +106,129 @@ void loop() {
   lastButtonState = reading;
   //End button stuff
 
-//enter patterns here
+  //enter patterns here
   switch (pattern) {
-  case FLOWER_PATTERN:
-  {
-    //This changes how many pixels are on at any given time. 
-//Increasing this affects current usage
-#define MAX_ACTIVE 20 
-
-      //Is it time to turn on a new pixel?
-      if ( millis() - lastPinTime > 1000 && activeCounter <= MAX_ACTIVE) {
-      int newPixel;
-      newPixel = random(0, NUM_LEDS);
-        //find an open pixel
-        while (LED_ARRAY[newPixel]!=0){
+    case FLOWER_PATTERN:
+      {
+        //This changes how many pixels are on at any given time.
+        //Increasing this affects current usage
+#define MAX_ACTIVE 20
+        //Is it time to turn on a new pixel?
+        if ( millis() - lastPinTime > 1000 && activeCounter <= MAX_ACTIVE) {
+          int newPixel;
           newPixel = random(0, NUM_LEDS);
-          Serial.println("Checking if "+String(newPixel));
+          //find an open pixel
+          while (LastColorIndex[newPixel] != 0) {
+            newPixel = random(0, NUM_LEDS);
+            Serial.println("Checking if " + String(newPixel));
+          }
+
+
+          //Add the new pixel
+          LastColorIndex[newPixel] = 1;
+
+          //reset the counter
+          lastPinTime = millis();
+
+          //Add to active counter
+          activeCounter += 1;
         }
 
+        //loop through pixels and do what needs to be done to the active ones
+        for (int i = 0; i < NUM_LEDS; i++) {
+          int currentPixel = i;
 
-       //Add the new pixel
-       LED_ARRAY[newPixel]=1;
+          //check if curentPin is active and skip is its not
 
-       //reset the counter
-       lastPinTime = millis();
+          if (LastColorIndex[currentPixel] == 0) {
+            continue;
+          }
 
-       //Add to active counter
-       activeCounter +=1;
+
+          //if cycle is complete, reset the color index and blank the pin
+          if (LastColorIndex[currentPixel] > 255) {
+            leds[currentPixel] = CRGB::Black;
+
+            //mark the current pixel as inactive and reset its index
+
+            LastColorIndex[currentPixel] = 0;
+            activeCounter -= 1;
+          }
+
+          //Change the pixels to the respective color index based on their place in the cycle.
+          leds[currentPixel] = ColorFromPalette(currentPalette, LastColorIndex[i], 64, currentBlending);
+
+          //update the index for the pin for the next loop
+          LastColorIndex[currentPixel] += 1;
+
+        }
+        //TODO: this delay is breaking the button (maybe).
+        FastLED.delay(60);
+        break;
       }
-
-      //loop through pixels and do what needs to be done to the active ones
-      for (int i = 0; i < NUM_LEDS; i++){
-      int currentPixel = i;
-
-      //check if curentPin is active and skip is its not
-      
-      if (LED_ARRAY[currentPixel]==0){
-        continue;
-      }
-
-      
-      //if cycle is complete, reset the color index and blank the pin
-      if (LastColorIndex[currentPixel] > 255) {
-        leds[currentPixel] = CRGB::Black;
-        
-        //mark the current pixel as inactive and reset its index
-        LED_ARRAY[currentPixel] =0;
-        LastColorIndex[currentPixel] = 0;
-        activeCounter -= 1;
-      }
-
-        //Change the pixels to the respective color index based on their place in the cycle.
-        leds[currentPixel] = ColorFromPalette(currentPalette, LastColorIndex[i], 64, currentBlending);
- 
-        //update the index for the pin for the next loop
-        LastColorIndex[currentPixel] += 1;
-    
-      }    
-//TODO: this delay is breaking the button (maybe).
-    FastLED.delay(60);
-    break;
-  }
 
     case HEART_PULSE_PATTERN:
-    {
-      //define the matrices for the coat parts
+      {
+        //define the matrices for the coat parts
+        CRGB pulseColor = CRGB::Red;
 
-int leftArm[][3] = {
-  {1,2,3},
-  {4,5,6},
-  {7,8,9},
-  {10,11,12},
-  {13,14,15},
-  {16,17,18}
-};
+        //matrices for the arms starting with the wrist at the top of the matrices
+        int leftArm[][4] = {
+          {1, 2, 3, 4},
+          {5, 6, 7, 8},
+          {8, 9, 10, 11},
+          {12, 13, 14, 15},
+          {16, 17, 18, 19},
+          {20, 21, 22, 23}
+        };
 
-int rightArm[][3] = {
-  {146,147,148},
-  {149,150,151},
-  {152,153,154},
-  {155,156,157},
-  {158,159,160},
-  {161,162,163},
-};
+        int rightArm[][4] = {
+          {163, 162, 161, 160},
+          {159, 158, 157, 156},
+          {155, 154, 153, 152},
+          {151, 150, 149, 148},
+          {147, 146, 145, 144},
+          {143, 142, 141, 140}
+        };
 
-    }
-    break;
-  }//end switch
-  
+        //pulse up both arms
+        int counter = 0;
+        if (millis() - lastPulse > 500) {
+          counter++;
+        }
+
+        if (counter > 5) {
+          counter = 0;
+        }
+
+        //black out all the pixels so that only the active rows are on
+        for (int i=0; i<NUM_LEDS;i++){
+          leds[i] = CRGB::Black;
+        }
+        
+
+        while (counter <= 5) {
+          leds[rightArm[counter][1]] = pulseColor;
+          leds[rightArm[counter][2]] = pulseColor;
+          leds[rightArm[counter][3]] = pulseColor;
+          leds[rightArm[counter][4]] = pulseColor;
+
+          leds[leftArm[counter][1]] = pulseColor;
+          leds[leftArm[counter][2]] = pulseColor;
+          leds[leftArm[counter][3]] = pulseColor;
+          leds[leftArm[counter][4]] = pulseColor;
+
+          FastLED.show();
+          lastPulse =  millis();
+        }
+        break;
+        {
+        }
+      }//end switch
+
+
+  }
 }
-
-
 
 void SetupPalette()
 {
