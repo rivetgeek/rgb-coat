@@ -13,6 +13,7 @@
 //This changes how many pixels are on at any given time.
 //Increasing this affects current usage
 #define MAX_ACTIVE 60
+#define PIN_FREQUENCY 500
 
 
 //Actual FastLed array. See Fast LED docs.
@@ -41,7 +42,7 @@ int row = 0;
 int LastColorIndex[NUM_LEDS];
 
 //var for current and start pattern
-int pattern = 1;
+int pattern = 2;
 
 int num_patterns = 2;
 
@@ -120,7 +121,7 @@ void loop() {
         }
 
         //Is it time to turn on a new pixel?
-        if ( millis() - lastPinTime > 1000 && activeCounter <= MAX_ACTIVE) {
+        if ( millis() - lastPinTime > PIN_FREQUENCY && activeCounter <= MAX_ACTIVE) {
           int newPixel;
           newPixel = random(0, NUM_LEDS);
 
@@ -187,7 +188,7 @@ void loop() {
 
         //define the matrices for the coat parts
         //matrices for the arms starting with the wrist at the top of the matrices
-        int rightArm[][4] = {
+        int rightArm[6][4] = {
           {0, 1, 2, 3},
           {4, 5, 6, 7},
           {8, 9, 10, 11},
@@ -196,7 +197,7 @@ void loop() {
           {20, 21, 22, 23}
         };
 
-        int leftArm[][4] = {
+        int leftArm[6][4] = {
           {162, 161, 160, 159},
           {158, 157, 156, 155},
           {154, 153, 152, 151},
@@ -206,23 +207,25 @@ void loop() {
         };
 
         //pulse up both arms
-
+   
+Serial.println("Millis minus last pulse is"+String(millis()-lastPulse));
         //if it is time to pulse up one row
         if (millis() - lastPulse > 500) {
+          Serial.println("Time to pulse!");
           row++;
-
+          Serial.println("The row is: "+String(row));
           // reset if we hit the top
           if (row > 5) {
             row = 0;
+            Serial.println("RESET THE SLEEVE!");
           }
+          lastPulse =  millis();
         }
 
 
 
         //black out all the pixels so that only the active rows are on
-        for (int i = 0; i < NUM_LEDS; i++) {
-          leds[i] = CRGB::Black;
-        }
+        FastLED.clear();
 
         // arm[row][column]
         leds[rightArm[row][0]] = pulseColor;
@@ -237,8 +240,8 @@ void loop() {
         leds[leftArm[row][3]] = pulseColor;
 
         FastLED.show();
-        FastLED.delay(60);
-        lastPulse =  millis();
+      //  FastLED.delay(60);
+        
 
 
       }//end heart pulse pattern
