@@ -12,7 +12,7 @@
 
 //This changes how many pixels are on at any given time.
 //Increasing this affects current usage
-#define MAX_ACTIVE 20
+#define MAX_ACTIVE 60
 
 
 //Actual FastLed array. See Fast LED docs.
@@ -41,7 +41,7 @@ int row = 0;
 int LastColorIndex[NUM_LEDS];
 
 //var for current and start pattern
-int pattern = 2;
+int pattern = 1;
 
 int num_patterns = 2;
 
@@ -70,9 +70,8 @@ void setup() {
   //set LED array to all zeros to allow tracking
   for (int i = 0; i < NUM_LEDS; i++) {
     LastColorIndex[i] = 0;
-  }
 }
-
+}
 void loop() {
   //Start Button stuff
   //detect button press to change pattern
@@ -115,14 +114,19 @@ void loop() {
     case FLOWER_PATTERN:
       {
 
+                //black out all the pixels so that only the active rows are on
+        for (int i = 0; i < NUM_LEDS; i++) {
+          leds[i] = CRGB::Black;
+        }
+
         //Is it time to turn on a new pixel?
         if ( millis() - lastPinTime > 1000 && activeCounter <= MAX_ACTIVE) {
           int newPixel;
-          newPixel = random(0, NUM_LEDS-1);
-          
+          newPixel = random(0, NUM_LEDS);
+
           //Keep generating random pixel locations until we find a free (0) slot.
           while (LastColorIndex[newPixel] != 0) {
-            newPixel = random(0, NUM_LEDS-1);
+            newPixel = random(0, NUM_LEDS);
           }
 
 
@@ -140,34 +144,39 @@ void loop() {
         for (int i = 0; i < NUM_LEDS; i++) {
           int currentPixel = i;
 
-          //check if curentPin is active and skip is its not
+            //check if curentPin is active and skip is its not
+          if (LastColorIndex[currentPixel] > 0) {
 
-          if (LastColorIndex[currentPixel] == 0) {
-            continue;
-          }
+            //if cycle is complete, reset the color index and blank the pin
+            if (LastColorIndex[currentPixel] >= 255) {
+
+              //turn the pixel off
+              leds[currentPixel] = CRGB::Black;
+
+              //mark the current pixel as inactive and reset its index
+              LastColorIndex[currentPixel] = 0;
+              
+              // FastLED.delay(60);
+              activeCounter -= 1;
+              continue; 
+            }
 
 
-          //if cycle is complete, reset the color index and blank the pin
-          if (LastColorIndex[currentPixel] > 255) {
-            leds[currentPixel] = CRGB::Black;
 
-            //mark the current pixel as inactive and reset its index
-
-            LastColorIndex[currentPixel] = 0;
-            FastLED.delay(60);
-            activeCounter -= 1;
-        }
-
+            //Change the pixels to the respective color index based on their place in the cycle.
+            leds[currentPixel] = ColorFromPalette(currentPalette, LastColorIndex[i], 64, currentBlending);
+            
+            //update the index for the pin for the next loop
+            LastColorIndex[currentPixel] += 1;
+            
+          }//end of active pixel if statement
           
+        }//end of for loop to set up the array to be shown
 
-          //Change the pixels to the respective color index based on their place in the cycle.
-          leds[currentPixel] = ColorFromPalette(currentPalette, LastColorIndex[i], 64, currentBlending);
-
-          //update the index for the pin for the next loop
-          LastColorIndex[currentPixel] += 1;
-        }//end of for loop
-        
-        
+      //Show the pixels based on the current "leds" array.
+      FastLED.show();
+      FastLED.delay(60);
+      
       }//end of case
       break;
 
@@ -202,7 +211,7 @@ void loop() {
         if (millis() - lastPulse > 500) {
           row++;
 
-        // reset if we hit the top
+          // reset if we hit the top
           if (row > 5) {
             row = 0;
           }
@@ -228,9 +237,10 @@ void loop() {
         leds[leftArm[row][3]] = pulseColor;
 
         FastLED.show();
+        FastLED.delay(60);
         lastPulse =  millis();
-        
-        
+
+
       }//end heart pulse pattern
       break;
 
