@@ -20,9 +20,8 @@ int num_patterns = 3;
 
 //This changes how many pixels are on at any given time.
 //Increasing this affects current usage
-#define MAX_ACTIVE 60
-#define PIN_FREQUENCY 200
-
+#define MAX_ACTIVE 40
+#define PIN_FREQUENCY 350
 
 //Actual FastLed array. See Fast LED docs.
 CRGBArray<NUM_LEDS> leds;
