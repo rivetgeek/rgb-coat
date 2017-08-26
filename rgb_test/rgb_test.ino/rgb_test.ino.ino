@@ -5,21 +5,23 @@
 #define CLOCK_PIN 4
 
 //Define the coat patterns
-#define TEST_PATTERN 1
-#define FLOWER_PATTERN 2
-#define HEART_PULSE_PATTERN 3
-//#define STARFIELD_PATTERN 3
+
+#define FLOWER_PATTERN 1
+#define HEART_PULSE_PATTERN 2
+#define NULL_PATTERN 3
+
 
 //var for current and start pattern
-int pattern = 3;
+int pattern = 1;
 
+//total number of patterns
 int num_patterns = 3;
 
 
 //This changes how many pixels are on at any given time.
 //Increasing this affects current usage
 #define MAX_ACTIVE 60
-#define PIN_FREQUENCY 500
+#define PIN_FREQUENCY 200
 
 
 //Actual FastLed array. See Fast LED docs.
@@ -31,19 +33,18 @@ int activeCounter = 0;
 //cars for test pattern
 unsigned long previousTime = 0;
 
-//keeps track of the LEDs and their state (on/off). i think we can get rid of this and save a ton of memory
-//int LED_ARRAY[NUM_LEDS];
 
 int unsigned long lastPinTime;
 
 //counter for heartbeat pulse
 int unsigned long lastPulse = 0;
 
+//brightness for pulsing
+int brightness;
+
 //what row is active (originally for pulse)
 int row = 0;
 
-// might be able to piggy
-//back on leds array above and remove this
 //array of last color index for active LEDS
 int LastColorIndex[NUM_LEDS];
 
@@ -69,61 +70,25 @@ void setup() {
   SetupPalette();
   pinMode(buttonPin, INPUT);
   Serial.begin(9600);
+  randomSeed(analogRead(0));
 
   //set LED array to all zeros to allow tracking
   for (int i = 0; i < NUM_LEDS; i++) {
     LastColorIndex[i] = 0;
-}
+  }
 }
 void loop() {
-  //Start Button stuff
-  //detect button press to change pattern
-  int reading = digitalRead(buttonPin);
-
-  //switch changed
-  if (reading != lastButtonState) {
-    lastDebounceTime = millis();
-
-  }
-
-
-  if ((millis() - lastDebounceTime) > debounceDelay) {
-
-    if (reading != buttonState) {
-      buttonState = reading;
-
-      if (buttonState == HIGH) {
-        previousTime = millis();
-        FastLED.clear();
-        lastPulse = 0;
-        row = 0;
-        if (pattern == num_patterns) {
-          pattern = 1;
-        } else {
-          pattern++;
-        }
-        Serial.println("Button pressed");
-        Serial.println("pattern is");
-        Serial.println(pattern);
-      }
-    }
-  }
-
-  lastButtonState = reading;
-  //End button stuff
-
+  ButtonCheck();
   //enter patterns here
   switch (pattern) {
     case FLOWER_PATTERN:
       {
 
-                //black out all the pixels so that only the active rows are on
-        for (int i = 0; i < NUM_LEDS; i++) {
-          leds[i] = CRGB::Black;
-        }
+        //black out all the pixels so that only the active rows are on
+        FastLED.clear();
 
         //Is it time to turn on a new pixel?
-        if ( millis() - lastPinTime > PIN_FREQUENCY && activeCounter <= MAX_ACTIVE) {
+        if ( (millis() - lastPinTime > PIN_FREQUENCY) && (activeCounter <= MAX_ACTIVE)) {
           int newPixel;
           newPixel = random(0, NUM_LEDS);
 
@@ -147,7 +112,7 @@ void loop() {
         for (int i = 0; i < NUM_LEDS; i++) {
           int currentPixel = i;
 
-            //check if curentPin is active and skip is its not
+          //check if curentPin is active and skip is its not
           if (LastColorIndex[currentPixel] > 0) {
 
             //if cycle is complete, reset the color index and blank the pin
@@ -158,28 +123,28 @@ void loop() {
 
               //mark the current pixel as inactive and reset its index
               LastColorIndex[currentPixel] = 0;
-              
+
               // FastLED.delay(60);
               activeCounter -= 1;
-              continue; 
+              continue;
             }
 
 
 
             //Change the pixels to the respective color index based on their place in the cycle.
             leds[currentPixel] = ColorFromPalette(currentPalette, LastColorIndex[i], 64, currentBlending);
-            
+
             //update the index for the pin for the next loop
             LastColorIndex[currentPixel] += 1;
-            
+
           }//end of active pixel if statement
-          
+
         }//end of for loop to set up the array to be shown
 
-      //Show the pixels based on the current "leds" array.
-      FastLED.show();
-      FastLED.delay(60);
-      
+        //Show the pixels based on the current "leds" array.
+        FastLED.show();
+        FastLED.delay(60);
+
       }//end of case
       break;
 
@@ -187,9 +152,18 @@ void loop() {
       {
 
         CRGB pulseColor = CRGB::Red;
+        ///----------------------------------------------------------------------------------------------
+        //wiring order:
+        //Right arm, right front, back, left front, hood, left arm
+
+
+        //right side 7 vertical x 3 horizontal
+
+        //back 7 vertical x 4 horizontal
 
         //define the matrices for the coat parts
         //matrices for the arms starting with the wrist at the top of the matrices
+        //-----------------------------------------------------------------------------------------------
         int rightArm[6][4] = {
           {0, 1, 2, 3},
           {4, 5, 6, 7},
@@ -208,78 +182,171 @@ void loop() {
           {130, 129, 128, 127}
         };
 
+        //right front side
+        // < -- to right arm
+        // -- > to center front
+        int rightSide[7][3] = {
+
+          {24, 37, 38},
+          {25, 36, 39},
+          {26, 35, 40},
+          {27, 34, 41},
+          {28, 33, 42},
+          {29, 32, 43},
+          {30, 31, 44}
+        };
+
+        int leftSide[7][3] = {
+          {93, 80, 79},
+          {92, 81, 78},
+          {91, 82, 77},
+          {90, 83, 76},
+          {89, 84, 75},
+          {88, 85, 74},
+          {87, 86, 73}
+
+        };
+
+        int back[7][4] = {
+          {51, 52, 65, 66},
+          {50, 53, 64, 67},
+          {49, 54, 63, 68},
+          {48, 55, 62, 69},
+          {47, 56, 61, 70},
+          {46, 57, 60, 71},
+          {45, 58, 59, 72}
+        };
+        //  int left side
         //pulse up both arms
-   
+
         //if it is time to pulse up one row
         if (millis() - lastPulse > 500) {
+          FastLED.clear();
           Serial.println("Time to pulse!");
-          row++;
-          Serial.println("The row is: "+String(row));
-          // reset if we hit the top
-          if (row > 5) {
-            row = 0;
-            Serial.println("RESET THE SLEEVE!");
-          }
+          Serial.println("The row is: " + String(row));
           lastPulse =  millis();
-       
 
 
 
-        //black out all the pixels so that only the active rows are on
-        FastLED.clear();
 
-        // arm[row][column]
-        leds[rightArm[row][0]] = pulseColor;
-        leds[rightArm[row][1]] = pulseColor;
-        leds[rightArm[row][2]] = pulseColor;
-        leds[rightArm[row][3]] = pulseColor;
-        Serial.println("making these right arm pixels red"+String(rightArm[row][0])+","+String(rightArm[row][1])+","+String(rightArm[row][2])+","+String(rightArm[row][3]));
+          //black out all the pixels so that only the active rows are on
+         // FastLED.clear();
+          //pulse across the chest
+          if (row > 5) {
+
+            //start sholder transition
+            if (row == 6) {
+              leds[leftSide[0][2]] = pulseColor;
+              leds[rightSide[0][0]] = pulseColor;
+              PulseAll(1);
+            }
+            //Beat the actual heart twice
+            if (row == 7) {
+              leds[rightSide[0][2]] = pulseColor;
+              leds[rightSide[1][2]] = pulseColor;
+              leds[rightSide[2][2]] = pulseColor;
+              leds[rightSide[3][2]] = pulseColor;
+              leds[rightSide[1][1]] = pulseColor;
+              leds[rightSide[2][1]] = pulseColor;
+              //left side
+              leds[leftSide[0][0]] = pulseColor;
+              leds[leftSide[1][0]] = pulseColor;
+              leds[leftSide[2][0]] = pulseColor;
+              leds[leftSide[3][0]] = pulseColor;
+              leds[leftSide[1][1]] = pulseColor;
+              leds[leftSide[2][1]] = pulseColor;
+
+              PulseAll(2);
+              row = 0;
+            }
+          } else {
+
+            //          Pulse up the arms
+            leds[rightArm[row][0]] = pulseColor;
+            leds[rightArm[row][1]] = pulseColor;
+            leds[rightArm[row][2]] = pulseColor;
+            leds[rightArm[row][3]] = pulseColor;
+
+            leds[leftArm[row][0]] = pulseColor;
+            leds[leftArm[row][1]] = pulseColor;
+            leds[leftArm[row][2]] = pulseColor;
+            leds[leftArm[row][3]] = pulseColor;
+
+            //loops through brightness levels for whole coat to create pulsing effect
+            PulseAll(1);
+
+          }
 
 
-        leds[leftArm[row][0]] = pulseColor;
-        leds[leftArm[row][1]] = pulseColor;
-        leds[leftArm[row][2]] = pulseColor;
-        leds[leftArm[row][3]] = pulseColor;
-         Serial.println("making these left arm pixels red"+String(leftArm[row][0])+","+String(leftArm[row][1])+","+String(leftArm[row][2])+","+String(leftArm[row][3]));
-
-        FastLED.show();
-      //  FastLED.delay(60);
-        
+          row++;
         }
 
       }//end heart pulse pattern
       break;
-//Test pattern - runs through RGB on all LEDs
-  case TEST_PATTERN:
-{
-  int colortime = 500;
-  //reset timer for first use or repeating pattern
-  CRGB color;
-  if (millis() - previousTime <= colortime){
-    color = CRGB::Red;
 
-  }
-    if (millis() - previousTime > colortime &&  millis() - previousTime< (colortime * 2)){
-    color = CRGB::Green;
-  }
-    if (millis() - previousTime > colortime* 2 && millis() - previousTime< colortime *3){
-    color = CRGB::Blue;
-  }
-      if (millis() - previousTime >= colortime * 4){
-  previousTime =millis();
-  }
-  
-    for (int i = 0; i < NUM_LEDS; i++) {
-      leds[i] = color;
-    }
-    FastLED.show();
-    
+case NULL_PATTERN:
+{
+  ButtonCheck();
+  FastLED.clear();
 }
 break;
+
 
   }//end switch
 }//end loop
 
+void ButtonCheck() {
+  FastLED.setBrightness(255);
+  //Start Button stuff
+  //detect button press to change pattern
+  int reading = digitalRead(buttonPin);
+
+  //switch changed
+  if (reading != lastButtonState) {
+    lastDebounceTime = millis();
+
+  }
+
+
+  if ((millis() - lastDebounceTime) > debounceDelay) {
+    //good press
+
+    if (reading != buttonState) {
+      buttonState = reading;
+
+      if (buttonState == HIGH) {
+        row = 0;
+        if (pattern == num_patterns) {
+          pattern = 1;
+        } else {
+          pattern++;
+        }
+        Serial.println("Button pressed");
+        Serial.println("pattern is");
+        Serial.println(pattern);
+      }
+    }
+  }
+
+  lastButtonState = reading;
+  //End button stuff
+}
+
+//PulseAll
+void PulseAll(int count) {
+  for (int i = 0; i < count; i++) {
+    for (int i = 0; i < 255; i++) {
+      ButtonCheck();
+      FastLED.setBrightness(i);
+      FastLED.show();
+    }
+    for (int i = 255; i > 0; i--) {
+      ButtonCheck();
+      FastLED.setBrightness(i);
+      FastLED.show();
+    }
+  }
+}
 void SetupPalette()
 {
   CRGB AliceBlue = CRGB::AliceBlue;
